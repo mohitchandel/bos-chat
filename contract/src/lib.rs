@@ -5,12 +5,12 @@ use near_sdk::{
     near_bindgen,
     serde::Serialize,
     store::Vector,
-    AccountId, BorshStorageKey, PanicOnDefault,
+    AccountId
 };
 
-#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
+#[derive(BorshSerialize, BorshDeserialize)]
 #[near_bindgen]
-pub struct Contract {
+pub struct ChatApp {
     messages: Vector<Message>,
 }
 
@@ -20,24 +20,19 @@ pub struct Message {
     id: u32,
     author: AccountId,
     block_height: U64,
-    text: String,
+    text: String
 }
 
-#[derive(BorshSerialize, BorshStorageKey)]
-enum StorageKey {
-    Messages,
+impl Default for ChatApp {
+    fn default() -> Self {
+        Self {
+            messages: Vector::new(b"m")
+        }
+    }
 }
 
 #[near_bindgen]
-impl Contract {
-    #[init(ignore_state)]
-    #[private]
-    pub fn new() -> Self {
-        Self {
-            messages: Vector::new(StorageKey::Messages),
-        }
-    }
-
+impl ChatApp {
     #[private]
     pub fn clear(&mut self) {
         self.messages.clear();
@@ -45,17 +40,13 @@ impl Contract {
 
     #[payable]
     pub fn send(&mut self, text: String) {
-        require!(env::attached_deposit() > 0, "Insufficient deposit.");
-
-        let storage_usage_start = env::storage_usage();
-
         let id = self.messages.len();
 
         let message = Message {
             author: env::predecessor_account_id(),
             block_height: env::block_height().into(),
             text,
-            id,
+            id
         };
 
         self.messages.push(message);
