@@ -1,4 +1,5 @@
 const contract = 'ece61a112fbb05b5ff96fd4d63cb259c4bae966477829666d46ddc4e5121d801';
+const accountId = context.accountId
 
 State.init({
   msg: ""
@@ -60,18 +61,24 @@ const Messages = styled.div`
   margin-top: 20px;
 `
 
-const Message = styled.div`
-  display: flex;
-  gap: 1.2em;
-  width: 70%;
-  justify-content: space-between;
-  background-color: white;
-  border-radius: 30px;
-  padding: 5px 10px;
-  margin-bottom: 1.5em;
-  box-shadow: 0px 5px 10px black;
-  position: relative;
-`;
+const messageStyle = isAuthor => ({
+  display: "flex",
+  flexDirection: isAuthor ? "row-reverse" : "row",
+  alignItems: "center",
+  float: isAuthor ? "right" : "left",
+  gap: "1.2em",
+  width: "60%",
+  justifyContent: "space-between",
+  backgroundColor: isAuthor ? "black" : "white",
+  color: isAuthor ? "white" : "#121212",
+  borderRadius: "30px",
+  padding: "5px 10px",
+  marginBottom: "1.5em",
+  boxShadow: "0px 3px 5px #121212",
+  position: "relative",
+  overflow: "hidden",
+  textOverflow: "ellipsis"
+})
 
 const Send = styled.div`
   width: 100%;
@@ -120,25 +127,31 @@ return (
     {
       messages.map((message) => {
         const [ msg, media ] = message.text?.split("_img_")
+        const isAuthor = message.author === accountId
+
         return (
           <>
             {
               media ? (
                 <img
-                  style={{ objectFit: "cover", width: "64%", marginLeft: "3%", border: "4px solid white", borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+                  style={{ float: isAuthor ? "right" : "left", objectFit: "cover", width: "54%", marginLeft: "3%", marginRight: "3%", border: `4px solid ${ isAuthor ? "black" : "white" }`, borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
                   src={`https://ipfs.near.social/ipfs/${media}`}
                   alt="message media"
                 />
               ) : <></>
             }
-            <Message>
-              <Widget
-                src="calebjacob.near/widget/AccountProfile"
-                props={{
-                  accountId: message.author,
-                }}
-                />
-              <div style={{ textAlign: "right", flexGrow: 1, paddingRight: "10px", maxWidth: "70%" }}>
+            <div style={messageStyle(isAuthor)}>
+              {
+                isAuthor ? <></> : (
+                  <Widget
+                    src="calebjacob.near/widget/AccountProfile"
+                    props={{
+                      accountId: message.author,
+                    }}
+                  />
+                )
+              }
+              <div style={{ textAlign: "right", flexGrow: 1, paddingRight: "10px", maxWidth: isAuthor ? "100%" : "70%" }}>
                 <p style={{ fontWeight: "bold"  }}>{msg}</p>
                 <div style={{ position: "absolute", bottom: 0, right: "20px" }}>
                   <Widget
@@ -149,7 +162,7 @@ return (
                     />ago
                 </div>
               </div>
-            </Message>
+            </div>
           </>
         )
       })
