@@ -4,10 +4,10 @@ State.init({
   msg: ""
 })
 
-const messages = Near.view(contract, 'get_messages', { limit: 3 });
+const messages = Near.view(contract, 'get_messages', { limit: 12 }, null, true);
 
 const sendMessage = () => {
-  if (state.message.length != 0) {
+  if (state.msg.length != 0) {
     let payload = { text: state.msg }
     if (state.img?.cid) {
       payload["media"] = state.img.cid
@@ -23,7 +23,6 @@ const handleUpload = body => {
     body,
   }).then((res) => {
     const cid = res.body.cid;
-    console.log("cid is", cid)
     State.update({ img: { cid } });
   });
 };
@@ -104,7 +103,7 @@ return (
       <input
         type="text"
         onInput={(e) => State.update({ msg: e.target.value })}
-        value={state.message}
+        value={state.msg}
         placeholder="Enter your message..."
         style={{ color: "white", backgroundColor: "black", border: 0, outlineWidth: 0 }}
       />
