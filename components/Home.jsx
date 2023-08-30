@@ -1,4 +1,4 @@
-const contract = '';
+const contract = 'ece61a112fbb05b5ff96fd4d63cb259c4bae966477829666d46ddc4e5121d801';
 
 State.init({
   msg: ""
@@ -8,11 +8,11 @@ const messages = Near.view(contract, 'get_messages', { limit: 12 }, null, true);
 
 const sendMessage = () => {
   if (state.msg.length != 0) {
-    let payload = { text: state.msg }
+    let text = state.msg
     if (state.img?.cid) {
-      payload["media"] = state.img.cid
+      text = `${text}_img_${state.img.cid}`
     }
-    Near.call(contract, 'send', payload)
+    Near.call(contract, 'send', { text })
   }
 }
 
@@ -118,38 +118,41 @@ return (
     </Send>
     <Messages>
     {
-      messages.map((message) => (
-        <>
-        {
-          message.media ? (
-            <img
-              style={{ objectFit: "cover", width: "64%", marginLeft: "3%", border: "4px solid white", borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
-              src={`https://ipfs.near.social/ipfs/${message.media}`}
-              alt="message media"
-            />
-          ) : <></>
-        }
-        <Message>
-          <Widget
-            src="calebjacob.near/widget/AccountProfile"
-            props={{
-              accountId: message.author,
-            }}
-            />
-          <div style={{ textAlign: "right", flexGrow: 1, paddingRight: "10px", maxWidth: "70%" }}>
-            <p style={{ fontWeight: "bold"  }}>{message.text}</p>
-            <div style={{ position: "absolute", bottom: 0, right: "20px" }}>
+      messages.map((message) => {
+        const [ msg, media ] = message.text?.split("_img_")
+        return (
+          <>
+            {
+              media ? (
+                <img
+                  style={{ objectFit: "cover", width: "64%", marginLeft: "3%", border: "4px solid white", borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+                  src={`https://ipfs.near.social/ipfs/${media}`}
+                  alt="message media"
+                />
+              ) : <></>
+            }
+            <Message>
               <Widget
-                src="andyh.near/widget/TimeAgo"
+                src="calebjacob.near/widget/AccountProfile"
                 props={{
-                  blockHeight: message.block_height
+                  accountId: message.author,
                 }}
-                />ago
-            </div>
-          </div>
-        </Message>
-        </>
-      ))
+                />
+              <div style={{ textAlign: "right", flexGrow: 1, paddingRight: "10px", maxWidth: "70%" }}>
+                <p style={{ fontWeight: "bold"  }}>{msg}</p>
+                <div style={{ position: "absolute", bottom: 0, right: "20px" }}>
+                  <Widget
+                    src="andyh.near/widget/TimeAgo"
+                    props={{
+                      blockHeight: message.block_height
+                    }}
+                    />ago
+                </div>
+              </div>
+            </Message>
+          </>
+        )
+      })
     }
     </Messages>
   </Bg>
