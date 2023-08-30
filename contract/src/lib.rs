@@ -20,7 +20,8 @@ pub struct Message {
     id: u32,
     author: AccountId,
     block_height: U64,
-    text: String
+    text: String,
+    media: Option<String>
 }
 
 impl Default for ChatApp {
@@ -39,13 +40,14 @@ impl ChatApp {
     }
 
     #[payable]
-    pub fn send(&mut self, text: String) {
+    pub fn send(&mut self, text: String, media: Option<String>) {
         let id = self.messages.len();
 
         let message = Message {
             author: env::predecessor_account_id(),
             block_height: env::block_height().into(),
             text,
+            media,
             id
         };
 
