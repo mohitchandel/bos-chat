@@ -1,5 +1,18 @@
-const contract = 'ece61a112fbb05b5ff96fd4d63cb259c4bae966477829666d46ddc4e5121d801';
-const messages = Near.view(contract, 'get_messages', { limit: 3 });
+const contract = '';
+
+State.init({
+  msg: ""
+})
+
+const messages = Near.view(contract, 'get_messages', { limit: 12 });
+
+const sendMessage = () => {
+  if (state.message.length != 0) {
+    Near.call(contract, 'send', {
+      text: state.msg,
+    })
+  }
+}
 
 const Bg = styled.div`
   background-color: #393e46;
@@ -64,7 +77,7 @@ return (
       </button>
       <input
         type="text"
-        onInput={(e) => State.update({ message: e.target.value })}
+        onInput={(e) => State.update({ msg: e.target.value })}
         value={state.message}
         placeholder="Enter your message..."
         style={{ color: "white", backgroundColor: "black", border: 0, outlineWidth: 0 }}
