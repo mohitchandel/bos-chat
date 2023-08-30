@@ -4,13 +4,34 @@ State.init({
   msg: ""
 })
 
-const messages = Near.view(contract, 'get_messages', { limit: 12 });
+const messages = Near.view(contract, 'get_messages', { limit: 3 });
 
 const sendMessage = () => {
   if (state.message.length != 0) {
-    Near.call(contract, 'send', {
-      text: state.msg,
-    })
+    let payload = { text: state.msg }
+    if (state.img?.cid) {
+      payload["media"] = state.img.cid
+    }
+    Near.call(contract, 'send', payload)
+  }
+}
+
+const handleUpload = body => {
+  asyncFetch("https://ipfs.near.social/add", {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body,
+  }).then((res) => {
+    const cid = res.body.cid;
+    console.log("cid is", cid)
+    State.update({ img: { cid } });
+  });
+};
+
+const selectFile = files => {
+  if (files) {
+    State.update({ img: { uploading: true, cid: null } });
+    handleUpload(files[0]);
   }
 }
 
@@ -48,7 +69,7 @@ const Message = styled.div`
   background-color: white;
   border-radius: 30px;
   padding: 5px 10px;
-  margin: 1em;
+  margin-bottom: 1.5em;
   box-shadow: 0px 5px 10px black;
   position: relative;
 `;
@@ -67,14 +88,19 @@ const Send = styled.div`
 return (
   <Bg>
     <Send>
-      <button
+      <div
         style={{ backgroundColor: "white", border: 0, borderRadius: "50%", padding: "12px" }}
-        onClick={() => {
-          sendMessage();
-        }}
       >
-         <img src="https://icons.veryicon.com/png/o/media/media-and-control/image-add-fill-3.png" height={25}/>
-      </button>
+        <Files
+          multiple={false}
+          accepts={["image/*"]}
+          minFileSize={1}
+          clickable
+          onChange={selectFile}
+        >
+          <img src="https://icons.veryicon.com/png/o/media/media-and-control/image-add-fill-3.png" height={25}/>
+        </Files>
+      </div>
       <input
         type="text"
         onInput={(e) => State.update({ msg: e.target.value })}
@@ -94,13 +120,23 @@ return (
     <Messages>
     {
       messages.map((message) => (
+        <>
+        {
+          message.media ? (
+            <img
+              style={{ objectFit: "cover", width: "64%", marginLeft: "3%", border: "4px solid white", borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+              src={`https://ipfs.near.social/ipfs/${message.media}`}
+              alt="message media"
+            />
+          ) : <></>
+        }
         <Message>
           <Widget
             src="calebjacob.near/widget/AccountProfile"
             props={{
               accountId: message.author,
             }}
-          />
+            />
           <div style={{ textAlign: "right", flexGrow: 1, paddingRight: "10px", maxWidth: "70%" }}>
             <p style={{ fontWeight: "bold"  }}>{message.text}</p>
             <div style={{ position: "absolute", bottom: 0, right: "20px" }}>
@@ -109,10 +145,11 @@ return (
                 props={{
                   blockHeight: message.block_height
                 }}
-              />ago
+                />ago
             </div>
           </div>
         </Message>
+        </>
       ))
     }
     </Messages>
